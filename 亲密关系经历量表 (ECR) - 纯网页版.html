@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成人依恋问卷 (ECR) 测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f9fafb; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="max-w-2xl w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-10 min-h-[400px]">
+        <!-- 内容将由 JavaScript 动态渲染 -->
+    </div>
+
+    <script>
+        const questions = [
+            "总的来说，我不喜欢让恋人知道自己内心深处的感觉", "我担心我会被抛弃", "我觉得跟恋人亲近是一件惬意的事情", "我很担心我的恋爱关系",
+            "当恋人开始要跟我亲近时，我发现我自己在退缩", "我担心恋人不会像我关心他/她那样地关心我", "当恋人希望跟我非常亲近时，我会觉得不自在", "我有点担心会失去恋人",
+            "我觉得对恋人开诚布公，不是一件很舒服的事情", "我常常希望恋人对我的感情和我对恋人的感情一样强烈", "我想与恋人亲近，但我又总是会退缩不前", "我常常想与恋人形影不离，但有时这样会把恋人吓跑",
+            "当恋人跟我过分亲密的时候，我会感到内心紧张", "我担心一个人独处", "我愿意把我内心的想法和感觉告诉恋人，我觉得这是一件自在的事情", "我想跟恋人非常亲密的愿望，有时会把恋人吓跑",
+            "我试图避免与恋人变得太亲近", "我需要我的恋人一再地保证他/她是爱我的", "我觉得我比较容易与恋人亲近", "我觉得自己在要求恋人把更多的感觉，以及对恋爱关系的投入程度表现出来",
+            "我发现让我依赖恋人，是一件困难的事情", "我并不是常常担心被恋人抛弃", "我倾向于不跟恋人过分亲密", "如果我无法得到恋人的注意和关心，我会心烦意乱或者生气",
+            "我跟恋人什么事情都讲", "我发现恋人并不愿意像我所想的那样跟我亲近", "我经常与恋人讨论我所遇到的问题以及我关心的事情", "如果我还没有恋人的话，我会感到有点焦虑和不安",
+            "我觉得依赖恋人是很自在的事情", "如果恋人不能像我我所希望的那样在我身边时，我会感到灰心丧气", "我并不在意从恋人那里寻找安慰，听取劝告，得到帮助", "如果在我需要的时候，恋人却不在我身边，我会感到沮丧",
+            "在需要的时候，我向恋人求助，是很有用的", "当恋人不赞同我时，我觉得确实是我不好", "我会在很多事情上向恋人求助，包括寻求安慰和得到承诺", "当恋人不花时间和我在一起时，我会感到怨恨"
+        ];
+        const reverseQuestions = [3, 15, 19, 22, 25, 27, 29, 31, 33, 35];
+        const styleInfo = {
+            M1: { name: "安全型 (Secure)", desc: "低回避、低焦虑。能自在依赖和被依赖，亲密关系中轻松自如，关系满意度高。", color: "bg-green-50 text-green-800 border-green-200" },
+            M2: { name: "恐惧型 (Fearful)", desc: "高回避、高焦虑。既渴望亲密又害怕被伤害，内心矛盾，难以信任他人。", color: "bg-purple-50 text-purple-800 border-purple-200" },
+            M3: { name: "专注型 / 焦虑型 (Preoccupied)", desc: "低回避、高焦虑。渴望亲密，常担心被抛弃，需要反复确认伴侣的爱。", color: "bg-orange-50 text-orange-800 border-orange-200" },
+            M4: { name: "冷漠型 / 回避型 (Dismissing)", desc: "高回避、低焦虑。倾向保持距离，不习惯依赖他人，强调独立性。", color: "bg-blue-50 text-blue-800 border-blue-200" }
+        };
+
+        let state = { step: 'start', currentQ: 0, answers: {}, result: null };
+        const app = document.getElementById('app');
+
+        function render() {
+            if (state.step === 'start') {
+                app.innerHTML = `
+                    <div class="text-center space-y-4 fade-in">
+                        <div class="text-5xl mb-4">❤️</div>
+                        <h1 class="text-2xl font-bold text-gray-800">成人依恋问卷 (ECR)</h1>
+                        <p class="text-gray-600 leading-relaxed text-sm sm:text-base">
+                            亲密关系经历量表（ECR）是目前学术界最广泛使用的成人依恋测量工具。
+                            本测试共 36 题，请根据您在恋爱关系或亲密关系中的<strong>真实感受</strong>进行作答。
+                        </p>
+                        <div class="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm text-left mt-6">
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>测试包含 36 道选择题，大约需要 3-5 分钟。</li>
+                                <li>选项从 1（非常不同意）到 7（非常同意）。</li>
+                                <li>系统会自动处理反向计分并计算您的最终依恋类型。</li>
+                            </ul>
+                        </div>
+                        <button onclick="startTest()" class="mt-8 px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition-colors w-full sm:w-auto">
+                            开始测试
+                        </button>
+                    </div>
+                `;
+            } else if (state.step === 'test') {
+                const progress = ((state.currentQ) / questions.length) * 100;
+                let buttonsHtml = '';
+                for(let i=1; i<=7; i++) {
+                    const isSelected = state.answers[state.currentQ] === i;
+                    const btnClass = isSelected 
+                        ? 'border-rose-500 bg-rose-50 text-rose-600' 
+                        : 'border-gray-200 hover:border-rose-300 hover:bg-rose-50 text-gray-600';
+                    buttonsHtml += `<button onclick="answer(${i})" class="h-12 sm:h-14 rounded-lg border-2 flex items-center justify-center text-lg font-medium transition-all cursor-pointer ${btnClass}">${i}</button>`;
+                }
+
+                app.innerHTML = `
+                    <div class="fade-in">
+                        <div class="mb-8">
+                            <div class="flex justify-between text-sm text-gray-500 mb-2">
+                                <span>进度: ${state.currentQ + 1} / ${questions.length}</span>
+                                <span>${Math.round(progress)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-2">
+                                <div class="bg-rose-400 h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        <div class="min-h-[120px] flex flex-col justify-center mb-8">
+                            <h2 class="text-xl sm:text-2xl font-medium text-gray-800 text-center leading-relaxed">
+                                ${questions[state.currentQ]}
+                            </h2>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-xs sm:text-sm text-gray-500 px-2 mb-2">
+                                <span>非常不同意</span>
+                                <span>中立</span>
+                                <span>非常同意</span>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 sm:gap-2">
+                                ${buttonsHtml}
+                            </div>
+                        </div>
+                        <div class="mt-10 flex justify-between">
+                            <button onclick="prevQ()" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors ${state.currentQ === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}" ${state.currentQ === 0 ? 'disabled' : ''}>
+                                ← 上一题
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (state.step === 'result') {
+                const typeInfo = styleInfo[state.result.type];
+                app.innerHTML = `
+                    <div class="text-center space-y-6 fade-in">
+                        <h2 class="text-2xl font-bold text-gray-800">您的测试结果</h2>
+                        <div class="p-6 rounded-xl border-2 ${typeInfo.color}">
+                            <h3 class="text-2xl sm:text-3xl font-bold mb-4">${typeInfo.name}</h3>
+                            <p class="text-base sm:text-lg opacity-90">${typeInfo.desc}</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-8">
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                <div class="text-sm text-gray-500 mb-1">依恋回避得分</div>
+                                <div class="text-2xl font-semibold text-gray-800">${state.result.scoreA}</div>
+                                <div class="text-xs text-gray-400 mt-1">(范围: 1-7)</div>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                <div class="text-sm text-gray-500 mb-1">依恋焦虑得分</div>
+                                <div class="text-2xl font-semibold text-gray-800">${state.result.scoreB}</div>
+                                <div class="text-xs text-gray-400 mt-1">(范围: 1-7)</div>
+                            </div>
+                        </div>
+                        <div class="text-left bg-gray-50 p-5 rounded-lg text-sm text-gray-600 mt-6 space-y-2">
+                            <p><strong>说明：</strong></p>
+                            <p>• <strong>依恋回避</strong>：指在亲密关系中对亲近和依赖感到不适的程度。</p>
+                            <p>• <strong>依恋焦虑</strong>：指在亲密关系中担心被拒绝或被抛弃的程度。</p>
+                            <p class="text-xs text-gray-400 mt-4 pt-4 border-t border-gray-200">
+                                注：心理学量表结果仅供自我探索参考，人类的情感模式是复杂且流动的，依恋类型也会随着个人成长和遇到不同的伴侣而发生改变。
+                            </p>
+                        </div>
+                        <button onclick="restartTest()" class="mt-8 px-6 py-3 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors w-full sm:w-auto">
+                            重新测试
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function startTest() { state.step = 'test'; state.currentQ = 0; state.answers = {}; render(); }
+        function restartTest() { startTest(); }
+        function prevQ() { if(state.currentQ > 0) { state.currentQ--; render(); } }
+        
+        function answer(score) {
+            state.answers[state.currentQ] = score;
+            render(); // 立即渲染选中状态
+            
+            setTimeout(() => {
+                if (state.currentQ < questions.length - 1) {
+                    state.currentQ++;
+                    render();
+                } else {
+                    calculateResult();
+                }
+            }, 200); // 延迟200ms跳转，让用户看到点击反馈
+        }
+
+        function calculateResult() {
+            let sumA = 0, sumB = 0;
+            for (let i = 0; i < 36; i++) {
+                let qNum = i + 1;
+                let score = state.answers[i];
+                if (reverseQuestions.includes(qNum)) score = 8 - score;
+                if (qNum % 2 !== 0) sumA += score;
+                else sumB += score;
+            }
+            const A = sumA / 18, B = sumB / 18;
+            const M1 = A * 3.2893296 + B * 5.4725318 - 11.5307833;
+            const M2 = A * 7.2371075 + B * 8.1776448 - 32.3553266;
+            const M3 = A * 3.9246754 + B * 9.7102446 - 28.4573220;
+            const M4 = A * 7.3654621 + B * 4.9392039 - 22.2281088;
+            
+            const scores = { M1, M2, M3, M4 };
+            const maxKey = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            
+            state.result = { type: maxKey, scoreA: A.toFixed(2), scoreB: B.toFixed(2) };
+            state.step = 'result';
+            render();
+        }
+
+        // 初始化
+        render();
+    </script>
+</body>
+</html>
